@@ -1,0 +1,58 @@
+[
+    {
+        "sid": "S001",
+        "name": "Sajini Perera",
+        "age": 20,
+        "address": "123 Main Street, Colombo",
+        "cgpa": 3.75
+    },
+    {
+        "sid": "S002",
+        "name": "Shafrin Rilwan Fazil",
+        "age": 21,
+        "address": "456 Galle Road, Colombo",
+        "cgpa": 3.92
+    },
+    {
+        "sid": "S003",
+        "name": "Oshada Jayarathana",
+        "age": 19,
+        "address": "789 Kandy Road, Kandy",
+        "cgpa": 3.45
+    },
+    {
+        "sid": "S004",
+        "name": "Manuka Waidyarathna",
+        "age": 22,
+        "address": "321 Negombo Road, Negombo",
+        "cgpa": 3.88
+    },
+    {
+        "sid": "S005",
+        "name": "Zara Niyas",
+        "age": 20,
+        "address": "654 Matara Road, Galle",
+        "cgpa": 3.6
+    },
+    {
+        "sid": "S006",
+        "name": "Vidya Harshika Yogeswaran",
+        "age": 21,
+        "address": "203\/A Buwelikada, Leemahakotuwa",
+        "cgpa": 3.55
+    },
+    {
+        "sid": "S007",
+        "name": "Telma Silva",
+        "age": 23,
+        "address": "304\/B\/3 Katugasthota, Kandy",
+        "cgpa": 3.9
+    },
+    {
+        "sid": "S008",
+        "name": "Abrar Ahamed",
+        "age": 21,
+        "address": "203\/A Buwelikada, Leemahakotuwa",
+        "cgpa": 3.88
+    }
+]

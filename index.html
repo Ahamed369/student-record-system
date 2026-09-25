@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Records System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h1>Student Records System</h1>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('search')">
+                <i class="fas fa-search"></i> Search Students
+            </button>
+            <button class="tab-btn" onclick="switchTab('add')">
+                <i class="fas fa-user-plus"></i> Add Student
+            </button>
+        </div>
+        
+        <!-- Search Tab Content -->
+        <div id="searchTab" class="tab-content active">
+            <div class="input-group">
+                <label for="studentId"><i class="fas fa-search"></i> Student ID</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="studentId" 
+                        placeholder="Enter student ID (e.g., S001)" 
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="getStudent()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="btn-secondary" onclick="getAllStudents()">
+                    <i class="fas fa-list"></i> Show All
+                </button>
+            </div>
+            
+            <div id="result"></div>
+            
+            <div class="hint">
+                <strong><i class="fas fa-info-circle"></i> Available IDs</strong>
+                <div class="student-ids" id="availableIds">
+                    <div class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Student Tab Content -->
+        <div id="addTab" class="tab-content">
+            <form id="addStudentForm" onsubmit="addStudent(event)">
+                <div class="input-group">
+                    <label for="newSid"><i class="fas fa-id-card"></i> Student ID *</label>
+                    <input 
+                        type="text" 
+                        id="newSid" 
+                        placeholder="e.g., S006" 
+                        required
+                    >
+                </div>
+                
+                <div class="input-group">
+                    <label for="newName"><i class="fas fa-user"></i> Full Name *</label>
+                    <input 
+                        type="text" 
+                        id="newName" 
+                        placeholder="e.g., John Doe" 
+                        required
+                    >
+                </div>
+                
+                <div class="input-group">
+                    <label for="newAge"><i class="fas fa-birthday-cake"></i> Age *</label>
+                    <input 
+                        type="number" 
+                        id="newAge" 
+                        placeholder="e.g., 20" 
+                        min="15" 
+                        max="100" 
+                        required
+                    >
+                </div>
+                
+                <div class="input-group">
+                    <label for="newAddress"><i class="fas fa-map-marker-alt"></i> Address *</label>
+                    <input 
+                        type="text" 
+                        id="newAddress" 
+                        placeholder="e.g., 123 Main Street, Colombo" 
+                        required
+                    >
+                </div>
+                
+                <div class="input-group">
+                    <label for="newCgpa"><i class="fas fa-chart-line"></i> CGPA *</label>
+                    <input 
+                        type="number" 
+                        id="newCgpa" 
+                        placeholder="e.g., 3.75" 
+                        min="0" 
+                        max="4" 
+                        step="0.01" 
+                        required
+                    >
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus-circle"></i> Add Student
+                    </button>
+                    <button type="reset" class="btn-secondary">
+                        <i class="fas fa-redo"></i> Reset Form
+                    </button>
+                </div>
+            </form>
+            
+            <div id="addResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load available student IDs on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadAvailableIds();
+        });
+        
+        // Function to load and display available student IDs
+        function loadAvailableIds() {
+            const idsContainer = document.getElementById('availableIds');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'get_student.php', true);
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        if (response.success && response.students) {
+                            let html = '';
+                            response.students.forEach((student) => {
+                                html += `<span class="student-id-badge">${student.sid}</span>`;
+                            });
+                            idsContainer.innerHTML = html;
+                        }
+                    } catch (e) {
+                        idsContainer.innerHTML = '<span style="color: #fca5a5; font-size: 12px;">Error loading IDs</span>';
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                idsContainer.innerHTML = '<span style="color: #fca5a5; font-size: 12px;">Error loading IDs</span>';
+            };
+            
+            xhr.send();
+        }
+        
+        // Tab switching functionality
+        function switchTab(tab) {
+            const searchTab = document.getElementById('searchTab');
+            const addTab = document.getElementById('addTab');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            
+            if (tab === 'search') {
+                searchTab.classList.add('active');
+                addTab.classList.remove('active');
+                tabButtons[0].classList.add('active');
+                tabButtons[1].classList.remove('active');
+                // Clear add result when switching
+                document.getElementById('addResult').className = '';
+                document.getElementById('addResult').innerHTML = '';
+            } else {
+                addTab.classList.add('active');
+                searchTab.classList.remove('active');
+                tabButtons[1].classList.add('active');
+                tabButtons[0].classList.remove('active');
+                // Clear search result when switching
+                document.getElementById('result').className = '';
+                document.getElementById('result').innerHTML = '';
+            }
+        }
+        
+        function getCGPAClass(cgpa) {
+            if (cgpa >= 3.7) return 'cgpa-excellent';
+            if (cgpa >= 3.3) return 'cgpa-good';
+            return 'cgpa-average';
+        }
+        
+        function getStudent() {
+            const studentId = document.getElementById('studentId').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (studentId === '') {
+                resultDiv.className = 'error show';
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <i class="fas fa-exclamation-circle error-icon"></i>
+                        <h3>Input Required</h3>
+                    </div>
+                    <p style="color: #fca5a5;">Please enter a student ID.</p>
+                `;
+                return;
+            }
+            
+            resultDiv.className = 'loading show';
+            resultDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p style="color: #93c5fd; margin-top: 12px;">Searching...</p>
+            `;
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'get_student.php?sid=' + encodeURIComponent(studentId), true);
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        if (response.success && response.student) {
+                            const student = response.student;
+                            const cgpaClass = getCGPAClass(parseFloat(student.cgpa));
+                            
+                            resultDiv.className = 'show';
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <i class="fas fa-check-circle"></i>
+                                    <h3>Student Found</h3>
+                                </div>
+                                <div class="student-card">
+                                    <div class="student-info">
+                                        <div class="info-label">ID</div>
+                                        <div class="info-value">${student.sid}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Name</div>
+                                        <div class="info-value">${student.name}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Age</div>
+                                        <div class="info-value">${student.age} years</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Address</div>
+                                        <div class="info-value">${student.address}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">CGPA</div>
+                                        <div class="info-value">
+                                            <span class="cgpa-badge ${cgpaClass}">${student.cgpa}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.className = 'error show';
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <i class="fas fa-times-circle error-icon"></i>
+                                    <h3>Not Found</h3>
+                                </div>
+                                <p style="color: #fca5a5;">${response.message}</p>
+                            `;
+                        }
+                    } catch (e) {
+                        resultDiv.className = 'error show';
+                        resultDiv.innerHTML = `
+                            <div class="result-header">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <h3>Error</h3>
+                            </div>
+                            <p style="color: #fca5a5;">Error parsing response.</p>
+                        `;
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.className = 'error show';
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <i class="fas fa-wifi error-icon"></i>
+                        <h3>Network Error</h3>
+                    </div>
+                    <p style="color: #fca5a5;">Please check your connection.</p>
+                `;
+            };
+            
+            xhr.send();
+        }
+        
+        function getAllStudents() {
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.className = 'loading show';
+            resultDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p style="color: #93c5fd; margin-top: 12px;">Loading all students...</p>
+            `;
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'get_student.php', true);
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        if (response.success && response.students) {
+                            let html = `
+                                <div class="result-header">
+                                    <i class="fas fa-users"></i>
+                                    <h3>All Students (${response.students.length})</h3>
+                                </div>
+                            `;
+                            
+                            response.students.forEach((student) => {
+                                const cgpaClass = getCGPAClass(parseFloat(student.cgpa));
+                                html += `
+                                    <div class="student-card">
+                                        <div class="student-info">
+                                            <div class="info-label">ID</div>
+                                            <div class="info-value">${student.sid}</div>
+                                        </div>
+                                        <div class="student-info">
+                                            <div class="info-label">Name</div>
+                                            <div class="info-value">${student.name}</div>
+                                        </div>
+                                        <div class="student-info">
+                                            <div class="info-label">Age</div>
+                                            <div class="info-value">${student.age} years</div>
+                                        </div>
+                                        <div class="student-info">
+                                            <div class="info-label">Address</div>
+                                            <div class="info-value">${student.address}</div>
+                                        </div>
+                                        <div class="student-info">
+                                            <div class="info-label">CGPA</div>
+                                            <div class="info-value">
+                                                <span class="cgpa-badge ${cgpaClass}">${student.cgpa}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            resultDiv.className = 'show';
+                            resultDiv.innerHTML = html;
+                        }
+                    } catch (e) {
+                        resultDiv.className = 'error show';
+                        resultDiv.innerHTML = `
+                            <div class="result-header">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <h3>Error</h3>
+                            </div>
+                            <p style="color: #fca5a5;">Error parsing response.</p>
+                        `;
+                    }
+                }
+            };
+            
+            xhr.send();
+        }
+        
+        // Add Student Function using AJAX POST
+        function addStudent(event) {
+            event.preventDefault();
+            
+            const resultDiv = document.getElementById('addResult');
+            
+            // Get form data
+            const newStudent = {
+                sid: document.getElementById('newSid').value.trim(),
+                name: document.getElementById('newName').value.trim(),
+                age: parseInt(document.getElementById('newAge').value),
+                address: document.getElementById('newAddress').value.trim(),
+                cgpa: parseFloat(document.getElementById('newCgpa').value)
+            };
+            
+            // Show loading state
+            resultDiv.className = 'loading show';
+            resultDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <p style="color: #93c5fd; margin-top: 12px;">Adding student...</p>
+            `;
+            
+            // Create AJAX request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'add_student.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        if (response.success) {
+                            const student = response.student;
+                            const cgpaClass = getCGPAClass(parseFloat(student.cgpa));
+                            
+                            resultDiv.className = 'show';
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <i class="fas fa-check-circle"></i>
+                                    <h3>Success!</h3>
+                                </div>
+                                <p style="color: #86efac; margin-bottom: 16px;">${response.message}</p>
+                                <div class="student-card">
+                                    <div class="student-info">
+                                        <div class="info-label">ID</div>
+                                        <div class="info-value">${student.sid}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Name</div>
+                                        <div class="info-value">${student.name}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Age</div>
+                                        <div class="info-value">${student.age} years</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">Address</div>
+                                        <div class="info-value">${student.address}</div>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="info-label">CGPA</div>
+                                        <div class="info-value">
+                                            <span class="cgpa-badge ${cgpaClass}">${student.cgpa}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Reset form after successful submission
+                            document.getElementById('addStudentForm').reset();
+                            
+                            // Refresh available IDs list
+                            loadAvailableIds();
+                        } else {
+                            resultDiv.className = 'error show';
+                            resultDiv.innerHTML = `
+                                <div class="result-header">
+                                    <i class="fas fa-times-circle error-icon"></i>
+                                    <h3>Failed</h3>
+                                </div>
+                                <p style="color: #fca5a5;">${response.message}</p>
+                            `;
+                        }
+                    } catch (e) {
+                        resultDiv.className = 'error show';
+                        resultDiv.innerHTML = `
+                            <div class="result-header">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <h3>Error</h3>
+                            </div>
+                            <p style="color: #fca5a5;">Error parsing response: ${e.message}</p>
+                        `;
+                    }
+                } else {
+                    resultDiv.className = 'error show';
+                    resultDiv.innerHTML = `
+                        <div class="result-header">
+                            <i class="fas fa-exclamation-triangle error-icon"></i>
+                            <h3>Server Error</h3>
+                        </div>
+                        <p style="color: #fca5a5;">Server returned status: ${xhr.status}</p>
+                    `;
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.className = 'error show';
+                resultDiv.innerHTML = `
+                    <div class="result-header">
+                        <i class="fas fa-wifi error-icon"></i>
+                        <h3>Network Error</h3>
+                    </div>
+                    <p style="color: #fca5a5;">Please check your connection.</p>
+                `;
+            };
+            
+            // Send the request with JSON data
+            xhr.send(JSON.stringify(newStudent));
+        }
+        
+        // Add Enter key support for search
+        document.getElementById('studentId').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                getStudent();
+            }
+        });
+    </script>
+</body>
+</html>
